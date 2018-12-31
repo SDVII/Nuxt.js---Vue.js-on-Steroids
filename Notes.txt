@@ -1,0 +1,224 @@
+General:
+    01) To create a new project, run: `npx create-nuxt-app`  and chose the desired options.
+    02) Project structure is paramount in a Nuxt, because it's used for compiling the project.
+    03) `index.vue` is your default root homepage.
+    04) With Nuxt, you can build universal app, single page apps and static apps.
+    05) In order to access the root of the project, you'll have to use "~/" at the beginning of the path. 
+
+Routing [M1]:
+    01) To create a new page, create a new folder with the name of the page which should include and index.vue to represent it
+        Ex: /pages/users/index.vue
+    02) For routes that take parameters, create folders with the name of the parameters with an underscore at the beginning.
+        Ex: /pages/users/_id/index.vue
+    03) To get the passed parameters, use: `{{ $route.params.paramName}}`
+    04) To create links, use: `<nuxt-link to="/pageName">Page Name</nuxt-link>`
+    05) You can use any of the vue-router methods in a nuxt app.
+    06) You can use the validate property in the script tag to validate the passed parameters.
+        * That validate property comes with a data object that holds info about the routing.
+        Ex: 
+        ```
+        validate (data){
+            console.log(data);
+            if (isNaN(data.params.id )) {
+                return false;
+            }
+            return true;
+        }
+        ```
+    07) You can set the style of the active link using `.nuxt-link-active` after the name of the tag or class
+        Ex: `a.nuxt-link-active`
+
+Layouts [M2,M3]:
+    01) A Layout is a wrapper for all pages. You can have multiple layouts.
+    02) You usually put shared css stylings in layouts
+    03) In order to use a different layout, create a new one in the layout folder and add the layout property and assign it too the layout's name
+        Ex: `layout: "users"`
+    04) Both `default.vue` and `error.vue` are reserved keywords. You can edit either in order to modify the default behavior.
+    05) Follow this link to broadcast and fetch errors for your custom error layout: https://medium.com/@mavrickmaster/custom-error-pages-with-nuxt-js-3c70e6c51aff
+    06) 
+
+Components [M2,M3]:
+    01) You can define components in the components folder and import them and use them like usual.
+    02) You can import components to layouts and other components as well.
+
+Assets [M2,M3]:
+    01) You can store assets that you want to be handled by webpack in the assets folder.
+    02) In order to apply global css styles:
+        1. You can define a .css file in the asset folder
+        2. include the path of it in the css array in the `nuxt.config.js`
+
+Handling Data [M4]:
+    01) You can use the property asyncData() [INSIDE PAGES ONLY] to handle async data retrieved from the server side by executing the methods on the server
+        Ex:
+        ```
+        export default {
+            asyncData(context, callback) {
+                callback(null, {
+                    //your data
+                })
+            }
+        }
+        ```
+        or
+        ```
+        export default {
+            asyncData(context, callback) {
+                return new Promise((resolve,reject)=>{
+                    resolve({
+                        //your code
+                    })
+                    // reject(new Error())
+                })then(data =>{
+                    return{
+                        //data that will be merged with the `data` property 
+                    }
+                }).catch(e =>{
+                    context.error(e)
+                })
+            }
+        }
+        ```
+        for more, check here: https://nuxtjs.org/guide/async-data/
+    02) `context` hold a lot of information about routing, store and more. This is important because `this` doesn't work inside of asyncData
+    03) 
+
+Vuex [M4]:
+    01) You can create vuex stores inside your store folder.
+        Ex:
+        ```
+        import Vuex from 'vuex'
+
+        const createStore = () => {
+        return new Vuex.Store({
+            state: {
+            loadPosts: []
+            },
+            mutations: {
+            setPosts(state, posts) {
+                state.loadPosts = posts
+            }
+            },
+            actions: {
+            setPosts(vuexContext) {
+                vuexContext.commit('setPosts', posts)
+            }
+            },
+            getters: {
+            loadPosts(state) {
+                return state.loadPosts
+            }
+            }
+        })
+        }
+
+        export default createStore
+
+    ```
+    02) To access, dispatch or do any store operations, simply use `this.$store`
+    03) Another way to use vuex is via the fetch property instead of asyncData
+        Ex:
+        ```
+        export default {
+            asyncData(context, callback) {
+                return new Promise((resolve,reject)=>{
+                    resolve({
+                        //your code
+                    })
+                    // reject(new Error())
+                })then(data =>{
+                    context.store.commit('functionName', data.varName)
+                }).catch(e =>{
+                    context.error(e)
+                })
+            }
+        }
+        ```
+    04) You should probably keep the auth token in the store as well as the other auth functions as actions.
+    05) When you refresh the page, the store gets reset. To avoid losing the token:
+        01- You can store it and the expiration timestamp (expiration time + current time) in a cookie.
+        02- Add a middleware to check the token and reinitialize it and reset the timer if the page was refreshed.
+        03- You can also check if the expiration date to clear an expired token.
+
+Nuxt Config [M5]:
+    01) You can set the headers of all pages inside `nuxt.config.js`
+    02) If you want to set the header for a specific page, use the head property
+        Ex:
+        ```
+        export default{
+            head: {
+                title: 'A page title'
+            }
+        }
+        ```
+    03) You can set more properties for loading property like height, duration and failColor.
+    04) For a SPA, you can add loadingIndicator property which would display a spinner instead.
+    05) You can add the environment variables in the env property, which makes them accessible to all components. To call it: `process.env.varName`
+    06) You can also inject node environment variables in there as well.
+        Ex:
+        ```
+        env: {
+            baseUrl: process.env.BASE_URL || 'https://...'
+        }
+    07) You can use the transition property to set a default transition between pages.
+        Ex:
+        ```
+        css: [
+            '~/assets/styles/main.css'
+        ]
+        transition: {
+            name: 'fade',
+            mode: 'out-in'
+        } 
+        ```
+
+Plugins [M6]
+    01) You can use the plugin property to define global components, like the ones you use often or the ones you import.
+        1- Create a .js file in the plugins folder, `core-components.js` for example.
+            Ex:
+            ```
+            import Vue from "vue"
+            import VueComponent from "~/components/VueComponent"
+
+            Vue.component("VueComponent", VueComponent)
+            ```
+        2- Add the script to the plugins array:
+            Ex: ``` plugins:['~plugins/core-components'] ```
+        3- This procedure would allow you to use such plugins anywhere without importing or mentioning them inside the components property.
+    02) You can also register global filters the same way, or any js code as long as you export it.
+
+Modules [M7]
+    01) You can add modules into your Nuxt app which can implement features and components on a deeper level
+        Resource: https://github.com/nuxt-community/awesome-nuxt#modules
+    02) To access this modules: `this.$moduleName` or `context.$moduleName`
+
+Middleware [M7]
+    01) You can implement some code that runs before any page loading using modules. Modules runs on server and client side
+        Ex: `log.js`
+        ```
+        export function (context) {
+            console.log("Hello");
+        }
+        ```
+    02) If your module handles async data, you have to return a promise.
+    03) To apply the middleware on a single page or layout, add it to the module property inside that page's component.
+        Ex: `middleware: 'log'`
+    04) To run this on every route, add it to the router property in the `nuxt.config.js`.
+    05) You can check if the user is logged in using middleware and a token stored in store.
+
+Static Website Generation [M9]:
+    01) Static websites gives you the best of both work:
+        01- No need for a nodejs hosting server.
+        02- SPA optimized.
+    02) However, routes needs to be added manually instead by adding them to the route's return function in the generate property.
+        Ex:
+        ```
+        generate:{
+            routes: function(){
+                return [
+                    'posts/someID'
+                    ..
+                ]
+            }
+        }
+        ```
+    03) This approach is not recommended for media heavy projects.
